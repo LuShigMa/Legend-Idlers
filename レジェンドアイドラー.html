@@ -58,6 +58,31 @@
             -webkit-text-fill-color: transparent;
             animation: rainbow 6s ease infinite;
         }
+        /* アルティメット用の極限明滅・輝きエフェクト */
+        @keyframes ultimateFlash {
+            0%, 100% {
+                text-shadow: 0 0 10px #00ffff, 0 0 20px #ff00ff, 0 0 30px #ffff00;
+                filter: brightness(1.2) contrast(1.2);
+            }
+            50% {
+                text-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff, 0 0 60px #ff0000;
+                filter: brightness(1.5) contrast(1.5);
+            }
+        }
+        .text-ultimate {
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #ff0000, #00ffff);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 3s ease infinite, ultimateFlash 2s infinite;
+        }
+        .border-ultimate {
+            border: 2px solid transparent;
+            background-image: linear-gradient(#0f172a, #0f172a), linear-gradient(45deg, #00ffff, #ff00ff, #ffff00, #00ffff);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            animation: rainbow 4s linear infinite;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between overflow-x-hidden">
@@ -443,7 +468,8 @@
                             レアリティと★星レベルが完全に等しければ、<span class="text-amber-400 font-bold">部位が異なっていても合体が可能</span>です！<br>
                             ★5装備同士を合体させると、次の上位レアリティ★1へと進化します。<br>
                             ★5の「トランセンデント」同士を合体すると、<span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-white to-red-400 font-bold">∞ インフィニティ（★99固定・性能100,000倍）</span>へと進化します！<br>
-                            ★99の「インフィニティ」同士を合体すると、宇宙最強のレアリティ<span class="text-legend-rainbow font-black">🌟 レジェンド（★99固定・性能1,844京倍）</span>へと昇華します！
+                            ★99の「インフィニティ」同士を合体すると、宇宙最強のレアリティ<span class="text-legend-rainbow font-black">🌟 レジェンド（★99固定・性能1,844京倍）</span>へと昇華します！<br>
+                            ★99の「レジェンド」同士を合体させると、全次元究極のレアリティ<span class="text-ultimate font-black">👑 アルティメット（★99固定・性能：インフィニティ×符号なし256bit最大値）</span>に到達します！
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
@@ -500,7 +526,7 @@
 
                     </div>
 
-                    <!-- サブタブ：チートガチャ (絞り込み機能追加) -->
+                    <!-- サブタブ：チートガチャ (絞り込み機能・最上位レア排出追加) -->
                     <div id="gearsub-gacha" class="hidden flex-grow flex flex-col space-y-4">
                         <div class="bg-slate-950 p-4 rounded-xl border border-fuchsia-500/50 flex flex-col space-y-4 relative overflow-hidden">
                             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.1),transparent_70%)] pointer-events-none"></div>
@@ -541,13 +567,16 @@
                                             <option value="gold">ゴールド獲得量 (GOLD)</option>
                                         </select>
                                     </div>
-                                    <!-- ランク指定 -->
+                                    <!-- ランク指定 (最上位追加) -->
                                     <div>
                                         <label class="block text-[10px] text-slate-400 mb-1 font-bold">品質指定:</label>
                                         <select id="gacha-filter-rarity" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-slate-300 focus:outline-none focus:border-fuchsia-500 font-bold">
                                             <option value="any">指定なし (ランダム)</option>
-                                            <option value="celestial" class="text-cyan-400">セレスティアル</option>
-                                            <option value="transcendent" class="text-fuchsia-400">トランセンデント</option>
+                                            <option value="celestial" class="text-cyan-400">セレスティアル (★5)</option>
+                                            <option value="transcendent" class="text-fuchsia-400">トランセンデント (★5)</option>
+                                            <option value="infinity" class="text-blue-400">インフィニティ (★99)</option>
+                                            <option value="legend" class="text-purple-400">レジェンド (★99)</option>
+                                            <option value="ultimate" class="text-pink-500 font-extrabold">アルティメット (★99)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -900,7 +929,7 @@
                 <div class="text-red-500 text-4xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 <h3 class="text-xl font-bold text-white">一括売却の確認</h3>
                 <p class="text-sm text-slate-400 mt-2">
-                    バッグ内の <span class="text-red-400 font-bold">トランセンデント、インフィニティ、レジェンド以外</span> のすべての装備を一気に売却します。<br>
+                    バッグ内の <span class="text-red-400 font-bold">トランセンデント、インフィニティ、レジェンド、アルティメット以外</span> のすべての装備を一気に売却します。<br>
                     この操作は取り消せません。本当によろしいですか？
                 </p>
             </div>
@@ -918,7 +947,7 @@
     <!-- ゲームロジック用スクリプト -->
     <script>
         // --- ゲームの初期状態＆マスターデータ ---
-        const GAME_VERSION = "2.8.0"; // レジェンドランク追加・インフィニティ合成進化対応
+        const GAME_VERSION = "2.9.0"; // アルティメットランク追加・チートガチャ追加排出対応
         const APP_ID = "legend_idler_savedata";
 
         // 全ての装備スロット
@@ -1078,7 +1107,8 @@
             celestial: { name: "セレスティアル", color: "text-cyan-300 font-bold drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]", border: "border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]", bg: "bg-cyan-950/40", power: 75.0 },
             transcendent: { name: "トランセンデント", color: "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-red-400 to-amber-400 font-black animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]", border: "border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.8)]", bg: "bg-fuchsia-950/50", power: 300.0 },
             infinity: { name: "インフィニティ", color: "text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-white to-red-400 font-black animate-bounce drop-shadow-[0_0_12px_rgba(255,255,255,0.9)]", border: "border-white shadow-[0_0_30px_rgba(255,255,255,1)]", bg: "bg-white/20", power: 30000000.0 },
-            legend: { name: "レジェンド", color: "text-legend-rainbow font-extrabold drop-shadow-[0_0_15px_rgba(168,85,247,0.9)] animate-pulse", border: "bg-legend-rainbow shadow-[0_0_35px_rgba(168,85,247,1)]", bg: "bg-purple-950/40", power: 55320000000000000000.0 } // インフィニティの18.44垓倍の強さに設定
+            legend: { name: "レジェンド", color: "text-legend-rainbow font-extrabold drop-shadow-[0_0_15px_rgba(168,85,247,0.9)] animate-pulse", border: "bg-legend-rainbow shadow-[0_0_35px_rgba(168,85,247,1)]", bg: "bg-purple-950/40", power: 55320000000000000000.0 }, // インフィニティの18.44垓倍
+            ultimate: { name: "アルティメット", color: "text-ultimate font-black drop-shadow-[0_0_20px_rgba(0,255,255,1)]", border: "border-ultimate shadow-[0_0_50px_rgba(0,255,255,1)]", bg: "bg-cyan-950/50", power: 34743285100000000000000000000000000000000000000000000000000000000000000000.0 } // インフィニティの強さ(30,000,000) * 符号なし256bitの最大数
         };
 
         // 星表示用ヘルパー関数
@@ -1895,12 +1925,15 @@
         // ★レベルを考慮した、実際の装備効果値を取得する関数
         function getEquipmentValue(item) {
             if (!item) return 0;
-            // インフィニティ・レジェンドは最大星レベル固定
+            // インフィニティ、レジェンド、アルティメットは最大星レベル固定
             if (item.rarity === "infinity") {
                 return Math.floor(item.baseValue * 1.5);
             }
             if (item.rarity === "legend") {
                 return Math.floor(item.baseValue * 2.0);
+            }
+            if (item.rarity === "ultimate") {
+                return Math.floor(item.baseValue * 3.0);
             }
             return Math.floor(item.baseValue * (1 + (item.star - 1) * 0.25));
         }
@@ -2248,9 +2281,7 @@
             }
         }
 
-        // --- 雇用＆レベルアップ処理 ---
-
-        // 冒険者の雇用
+        // --- 冒険者雇用＆レベルアップ処理 ---
         function buyAdventurer(id) {
             const adv = adventurerTemplates.find(a => a.id === id);
             const level = state.adventurerLevels[id] || 0;
@@ -2360,8 +2391,11 @@
                     
                     const rat = raritySettings[item.rarity];
                     
-                    if (item.rarity === "legend") {
-                        // レジェンド専用の虹色テキスト
+                    if (item.rarity === "ultimate") {
+                        // アルティメット専用の極限虹明滅テキスト
+                        nameEl.className = "text-[9px] font-black leading-tight truncate w-full text-ultimate";
+                        slotCard.className = "bg-cyan-950/30 p-2 rounded-xl text-center flex flex-col items-center justify-center min-h-[95px] relative border-ultimate shadow-[0_0_25px_rgba(0,255,255,0.6)]";
+                    } else if (item.rarity === "legend") {
                         nameEl.className = "text-[9px] font-black leading-tight truncate w-full text-legend-rainbow";
                         slotCard.classList.add("border-2", "border-purple-500", "shadow-[0_0_25px_rgba(168,85,247,0.7)]", "animate-pulse");
                     } else {
@@ -2376,7 +2410,7 @@
                         else if (item.rarity === "infinity") slotCard.classList.add("border-white", "shadow-[0_0_30px_rgba(255,255,255,1)]", "animate-bounce");
                     }
 
-                    if (slot === "artifact") {
+                    if (slot === "artifact" && item.rarity !== "ultimate") {
                         slotCard.classList.add("shadow-[0_0_15px_rgba(236,72,153,0.5)]", "border-pink-500");
                     }
 
@@ -2422,19 +2456,21 @@
                 const rat = raritySettings[item.rarity];
                 const card = document.createElement("div");
                 
-                if (item.rarity === "legend") {
+                if (item.rarity === "ultimate") {
+                    card.className = "p-3 rounded-xl border-ultimate shadow-[0_0_20px_rgba(0,255,255,0.4)] transition hover:scale-[1.01] flex flex-col justify-between";
+                } else if (item.rarity === "legend") {
                     card.className = `p-3 rounded-xl border-2 flex flex-col justify-between ${rat.bg} border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.5)] transition hover:scale-[1.01]`;
                 } else {
                     card.className = `p-3 rounded-xl border flex flex-col justify-between ${rat.bg} ${rat.border} transition hover:scale-[1.01]`;
                 }
                 
-                if (item.type === "artifact") {
+                if (item.type === "artifact" && item.rarity !== "ultimate") {
                     card.classList.add("shadow-[0_0_15px_rgba(236,72,153,0.5)]", "border-pink-500");
                 }
 
                 const starStr = getStarString(item.star);
                 const effectText = getEquipmentEffectText(item);
-                const rarityLabelColor = item.rarity === "legend" ? "text-legend-rainbow font-extrabold" : rat.color;
+                const rarityLabelColor = item.rarity === "ultimate" ? "text-ultimate font-black" : (item.rarity === "legend" ? "text-legend-rainbow font-extrabold" : rat.color);
 
                 card.innerHTML = `
                     <div class="flex items-center space-x-2.5">
@@ -2442,7 +2478,7 @@
                         <div class="flex-grow min-w-0">
                             <div class="font-bold text-xs truncate ${rarityLabelColor}">${item.name}</div>
                             <div class="flex justify-between items-center text-[10px] text-slate-400">
-                                <span class="${item.rarity === 'legend' ? 'text-purple-400 font-bold' : ''}">${rat.name} (${getTypeName(item.type)})</span>
+                                <span class="${item.rarity === 'legend' ? 'text-purple-400 font-bold' : (item.rarity === 'ultimate' ? 'text-cyan-400 font-extrabold' : '')}">${rat.name} (${getTypeName(item.type)})</span>
                                 <span class="text-amber-400 font-mono font-bold">${starStr}</span>
                             </div>
                             <div class="text-xs text-emerald-400 font-bold mt-1">${effectText}</div>
@@ -2493,7 +2529,9 @@
             // 現在の装備の変更をアクティブデッキにも反映
             state.decks[state.activeDeckIndex] = { ...state.equipped };
 
-            if (itemToEquip.rarity === "legend") {
+            if (itemToEquip.rarity === "ultimate") {
+                showToast("👑全次元究極の権能👑", `${itemToEquip.emoji} 究極神話 ${itemToEquip.name} を装備しました。`, "fa-dragon");
+            } else if (itemToEquip.rarity === "legend") {
                 showToast("🌟神を超える伝説🌟", `${itemToEquip.emoji} 宇宙を超越する ${itemToEquip.name} を装備しました。`, "fa-dragon");
             } else if (itemToEquip.rarity === "infinity") {
                 showToast("∞ 無限の権能 ∞", `${itemToEquip.emoji} 無限の力を持つ ${itemToEquip.name} を装備しました。`, "fa-infinity");
@@ -2560,7 +2598,7 @@
             saveGame();
         }
 
-        // 不要なアイテムを一括売却 (レジェンド装備も保護リストに追加)
+        // 不要なアイテムを一括売却 (アルティメット・レジェンド装備も保護リストに追加)
         function sellAllItems() {
             if (state.inventory.length === 0) {
                 showToast("バッグが空です", "売却できるアイテムがありません。", "fa-info-circle");
@@ -2579,8 +2617,8 @@
             
             for (let i = state.inventory.length - 1; i >= 0; i--) {
                 const item = state.inventory[i];
-                // トランセンデント、インフィニティ、レジェンドは絶対に自動売却・一括売却しない
-                if (item.rarity !== "transcendent" && item.rarity !== "infinity" && item.rarity !== "legend") {
+                // トランセンデント、インフィニティ、レジェンド、アルティメットは絶対に自動売却・一括売却しない
+                if (item.rarity !== "transcendent" && item.rarity !== "infinity" && item.rarity !== "legend" && item.rarity !== "ultimate") {
                     totalEarned += item.sellValue;
                     
                     if (mergeSelection.base && mergeSelection.base.id === item.id) mergeSelection.base = null;
@@ -2615,6 +2653,7 @@
             if (baseItem.rarity === "celestial") rarityMultiplier = 350;
             if (baseItem.rarity === "transcendent") rarityMultiplier = 1500;
             if (baseItem.rarity === "infinity") rarityMultiplier = 10000;
+            if (baseItem.rarity === "legend") rarityMultiplier = 50000;
 
             return Math.floor(150 * baseItem.star * rarityMultiplier * (1 + state.maxArea * 0.5));
         }
@@ -2627,7 +2666,12 @@
             if (mergeSelection.base) {
                 const rat = raritySettings[mergeSelection.base.rarity];
                 
-                if (mergeSelection.base.rarity === "legend") {
+                if (mergeSelection.base.rarity === "ultimate") {
+                    baseSlot.className = `w-24 h-24 rounded-2xl cursor-pointer flex flex-col items-center justify-center p-2 relative text-center bg-cyan-950/40 border-ultimate shadow-[0_0_20px_rgba(0,255,255,0.5)]`;
+                    document.getElementById("merge-base-emoji").textContent = mergeSelection.base.emoji;
+                    document.getElementById("merge-base-name").textContent = `${mergeSelection.base.name} ${getStarString(mergeSelection.base.star)}`;
+                    document.getElementById("merge-base-name").className = `text-[9px] font-black truncate w-full mt-1 text-ultimate`;
+                } else if (mergeSelection.base.rarity === "legend") {
                     baseSlot.className = `w-24 h-24 rounded-2xl border-2 cursor-pointer flex flex-col items-center justify-center p-2 relative text-center bg-purple-950/40 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.5)]`;
                     document.getElementById("merge-base-emoji").textContent = mergeSelection.base.emoji;
                     document.getElementById("merge-base-name").textContent = `${mergeSelection.base.name} ${getStarString(mergeSelection.base.star)}`;
@@ -2648,7 +2692,12 @@
             if (mergeSelection.material) {
                 const rat = raritySettings[mergeSelection.material.rarity];
                 
-                if (mergeSelection.material.rarity === "legend") {
+                if (mergeSelection.material.rarity === "ultimate") {
+                    materialSlot.className = `w-24 h-24 rounded-2xl cursor-pointer flex flex-col items-center justify-center p-2 relative text-center bg-cyan-950/40 border-ultimate shadow-[0_0_20px_rgba(0,255,255,0.5)]`;
+                    document.getElementById("merge-material-emoji").textContent = mergeSelection.material.emoji;
+                    document.getElementById("merge-material-name").textContent = `${mergeSelection.material.name} ${getStarString(mergeSelection.material.star)}`;
+                    document.getElementById("merge-material-name").className = `text-[9px] font-black truncate w-full mt-1 text-ultimate`;
+                } else if (mergeSelection.material.rarity === "legend") {
                     materialSlot.className = `w-24 h-24 rounded-2xl border-2 cursor-pointer flex flex-col items-center justify-center p-2 relative text-center bg-purple-950/40 border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.5)]`;
                     document.getElementById("merge-material-emoji").textContent = mergeSelection.material.emoji;
                     document.getElementById("merge-material-name").textContent = `${mergeSelection.material.name} ${getStarString(mergeSelection.material.star)}`;
@@ -2675,11 +2724,12 @@
                 costDisplay.textContent = formatNum(mergeCost);
 
                 let previewHTML = "";
-                // インフィニティ同士の合成は星レベルが99(MAX)同士なので、isEvolution判定を拡張
+                // 進化判定（各最上位進化のトリガー）
                 const isEvolution = (mergeSelection.base.star === 5 && mergeSelection.material.star === 5) || 
-                                    (mergeSelection.base.rarity === "infinity" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99);
+                                    (mergeSelection.base.rarity === "infinity" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99) ||
+                                    (mergeSelection.base.rarity === "legend" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99);
 
-                if (isEvolution && mergeSelection.base.rarity !== "legend") {
+                if (isEvolution && mergeSelection.base.rarity !== "ultimate") {
                     const nextRarity = getNextRarity(mergeSelection.base.rarity);
                     const ratNext = raritySettings[nextRarity];
                     
@@ -2687,8 +2737,10 @@
                     if (nextRarity === "infinity") {
                         nextBaseVal = Math.floor(mergeSelection.base.baseValue * 100000);
                     } else if (nextRarity === "legend") {
-                        // 18.44垓倍 (18.44 * 10^20)
                         nextBaseVal = Math.floor(mergeSelection.base.baseValue * 1844000000000000000000);
+                    } else if (nextRarity === "ultimate") {
+                        // インフィニティ(30,000,000) * 2^256-1
+                        nextBaseVal = Math.floor(30000000 * 1.157920892373162e+77);
                     }
 
                     const evolvedVirtualItem = {
@@ -2696,10 +2748,10 @@
                         rarity: nextRarity,
                         effectType: mergeSelection.base.effectType,
                         baseValue: nextBaseVal,
-                        star: 99 // インフィニティおよびレジェンドは★99固定
+                        star: 99 // インフィニティ、レジェンド、アルティメットは★99固定
                     };
 
-                    const labelClass = nextRarity === "legend" ? "text-legend-rainbow font-black" : `${ratNext.color} font-bold`;
+                    const labelClass = nextRarity === "ultimate" ? "text-ultimate font-black" : (nextRarity === "legend" ? "text-legend-rainbow font-black" : `${ratNext.color} font-bold`);
 
                     previewHTML = `
                         <div class="flex items-center justify-center space-x-2 text-xs">
@@ -2707,10 +2759,10 @@
                             <span class="text-amber-500"><i class="fa-solid fa-angles-right animate-pulse"></i></span>
                             <span class="${labelClass}">★99 [${ratNext.name}進化！]</span>
                         </div>
-                        <p class="text-emerald-400 font-bold text-xs mt-1.5">性能が次元を超えて進化します！</p>
+                        <p class="text-emerald-400 font-bold text-xs mt-1.5">性能が究極限界を超えて進化します！</p>
                     `;
-                } else if (mergeSelection.base.rarity === "legend") {
-                    previewHTML = `<p class="text-legend-rainbow font-extrabold text-xs py-4 drop-shadow-md">これ以上進化できません (限界突破済)</p>`;
+                } else if (mergeSelection.base.rarity === "ultimate") {
+                    previewHTML = `<p class="text-ultimate font-black text-xs py-4 drop-shadow-md">全宇宙究極：これ以上の進化は存在しません</p>`;
                     executeBtn.disabled = true;
                 } else {
                     const targetStar = mergeSelection.base.star + 1;
@@ -2729,7 +2781,7 @@
                     `;
                 }
 
-                if (mergeSelection.base.rarity !== "legend") {
+                if (mergeSelection.base.rarity !== "ultimate") {
                     previewEl.innerHTML = previewHTML;
                     if (state.gold >= mergeCost) {
                         executeBtn.disabled = false;
@@ -2746,7 +2798,7 @@
             }
         }
 
-        // 次のレアリティの取得 (レジェンド対応)
+        // 次のレアリティの取得 (レジェンド、アルティメット対応)
         function getNextRarity(currentRarity) {
             if (currentRarity === "common") return "rare";
             if (currentRarity === "rare") return "epic";
@@ -2756,7 +2808,8 @@
             if (currentRarity === "celestial") return "transcendent";
             if (currentRarity === "transcendent") return "infinity";
             if (currentRarity === "infinity") return "legend";
-            return "legend";
+            if (currentRarity === "legend") return "ultimate";
+            return "ultimate";
         }
 
         // 合体素材の選択候補パネルを展開する
@@ -2783,10 +2836,10 @@
                     const rat = raritySettings[item.rarity];
                     const isSelected = mergeSelection.material && mergeSelection.material.id === item.id;
                     if (isSelected) return;
-                    if (item.rarity === "legend") return; // レジェンドはベースに選べない
+                    if (item.rarity === "ultimate") return; // アルティメットはベースに選べない
 
                     const div = document.createElement("div");
-                    const labelColor = item.rarity === "legend" ? "text-legend-rainbow" : rat.color;
+                    const labelColor = item.rarity === "ultimate" ? "text-ultimate font-black" : (item.rarity === "legend" ? "text-legend-rainbow" : rat.color);
                     div.className = `p-2 rounded-lg border text-xs flex justify-between items-center cursor-pointer hover:bg-slate-800 ${rat.bg} ${rat.border}`;
                     div.onclick = () => selectItemForMerge(item);
                     div.innerHTML = `
@@ -2825,7 +2878,7 @@
                 candidates.forEach(item => {
                     const rat = raritySettings[item.rarity];
                     const div = document.createElement("div");
-                    const labelColor = item.rarity === "legend" ? "text-legend-rainbow" : rat.color;
+                    const labelColor = item.rarity === "ultimate" ? "text-ultimate font-black" : (item.rarity === "legend" ? "text-legend-rainbow" : rat.color);
                     div.className = `p-2 rounded-lg border text-xs flex justify-between items-center cursor-pointer hover:bg-slate-800 ${rat.bg} ${rat.border}`;
                     div.onclick = () => selectItemForMerge(item);
                     div.innerHTML = `
@@ -2881,7 +2934,8 @@
             state.gold -= mergeCost;
 
             const isEvolution = (mergeSelection.base.star === 5 && mergeSelection.material.star === 5) || 
-                                (mergeSelection.base.rarity === "infinity" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99);
+                                (mergeSelection.base.rarity === "infinity" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99) ||
+                                (mergeSelection.base.rarity === "legend" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99);
 
             if (isEvolution) {
                 const currentBase = state.inventory[baseIdx];
@@ -2889,9 +2943,15 @@
                 
                 currentBase.rarity = nextRarity;
                 
-                if (nextRarity === "legend") {
+                if (nextRarity === "ultimate") {
                     currentBase.star = 99;
-                    // インフィニティの18.44垓倍
+                    // インフィニティ(30,000,000) * 2^256-1
+                    const rawVal = 30000000 * 1.157920892373162e+77;
+                    currentBase.baseValue = rawVal;
+                    currentBase.sellValue = rawVal;
+                    showToast("👑 全次元アルティメット神話 👑", `すべての理を統べる究極体「${currentBase.name}」が覚醒した！`, "fa-dragon");
+                } else if (nextRarity === "legend") {
+                    currentBase.star = 99;
                     currentBase.baseValue = Math.floor(currentBase.baseValue * 1844000000000000000000);
                     currentBase.sellValue = Math.floor(currentBase.sellValue * 1844000000000000000000);
                     showToast("🌟 伝説爆誕 🌟", `宇宙をも統べる伝説「${currentBase.name}」がレジェンドとして覚醒した！`, "fa-dragon");
@@ -3231,7 +3291,7 @@
             document.getElementById("dpc-display").textContent = formatNum(currentDpc);
             document.getElementById("dps-display").textContent = formatNum(currentDps);
 
-            // 仲間（冒険者）たちの個別DPS表示もこのタイミングで最新チートボーナスに基づいて全自動再描画！
+            // 仲間（冒険者）たちの個別DPS表示を最新チートボーナスに基づいて全自動再描画
             adventurerTemplates.forEach(adv => {
                 const lvl = state.adventurerLevels[adv.id] || 0;
                 const dpsEl = document.getElementById(`adv-dps-${adv.id}`);
@@ -3772,7 +3832,7 @@
             }
         }
 
-        // オートセーブを20秒毎に実行するように強化
+        // オートセーブを20秒毎に実行
         function setupAutoSave() {
             setInterval(() => {
                 saveGame();
@@ -3882,6 +3942,8 @@
                 tTitle.className = "font-black text-sm text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-white to-red-400 animate-pulse drop-shadow-[0_0_5px_rgba(255,255,255,0.8)]";
             } else if (iconClass === "fa-dragon" && title.includes("伝説")) {
                 tTitle.className = "font-black text-sm text-legend-rainbow animate-pulse drop-shadow-[0_0_10px_rgba(168,85,247,0.9)]";
+            } else if (title.includes("究極")) {
+                tTitle.className = "font-black text-sm text-ultimate";
             } else {
                 tTitle.className = "font-bold text-sm";
             }
@@ -3945,17 +4007,25 @@
             
             let transcendentCount = 0;
             let celestialCount = 0;
+            let infinityCount = 0;
+            let legendCount = 0;
+            let ultimateCount = 0;
 
             for (let i = 0; i < pulls; i++) {
                 const newItem = generateCheatGachaItem(filterType, filterEffect, filterRarity);
-                if (newItem.rarity === "transcendent") transcendentCount++;
+                if (newItem.rarity === "ultimate") ultimateCount++;
+                else if (newItem.rarity === "legend") legendCount++;
+                else if (newItem.rarity === "infinity") infinityCount++;
+                else if (newItem.rarity === "transcendent") transcendentCount++;
                 else celestialCount++;
                 state.inventory.push(newItem);
             }
             
             // 最高レアが出たときはお知らせを豪華に
-            if (transcendentCount > 0) {
-                showToast("🌟神話級大量発生🌟", `超絶装備を${pulls}個獲得！ (トランセンデント: ${transcendentCount}個, セレスティアル: ${celestialCount}個)`, "fa-star-of-david");
+            if (ultimateCount > 0) {
+                showToast("👑究極神話降臨👑", `究極の装備を${pulls}個獲得！ (アルティメット: ${ultimateCount}個, レジェンド: ${legendCount}個, インフィニティ: ${infinityCount}個)`, "fa-dragon");
+            } else if (legendCount > 0 || infinityCount > 0) {
+                showToast("🌟神話級大量発生🌟", `超絶装備を${pulls}個獲得！ (レジェンド: ${legendCount}個, インフィニティ: ${infinityCount}個, トランセンデント: ${transcendentCount}個)`, "fa-star-of-david");
             } else {
                 showToast("★5 神話級ガチャ結果！", `超絶装備を${pulls}個獲得！ (トランセンデント: ${transcendentCount}個, セレスティアル: ${celestialCount}個)`, "fa-star");
             }
@@ -3982,7 +4052,11 @@
             
             let rarity = forcedRarity;
             if (rarity === "any") {
-                rarity = Math.random() < 0.2 ? "transcendent" : "celestial";
+                const rarityRand = Math.random();
+                if (rarityRand < 0.02) rarity = "ultimate";
+                else if (rarityRand < 0.08) rarity = "legend";
+                else if (rarityRand < 0.20) rarity = "infinity";
+                else rarity = Math.random() < 0.3 ? "transcendent" : "celestial";
             }
 
             const templateList = itemNames[selectedType];
@@ -4009,8 +4083,18 @@
                 baseValue *= 3;
             }
 
-            const finalValue = Math.max(1, Math.floor(baseValue * rarityMultiplier));
-            const sellVal = Math.floor(finalValue * 3.5 * effectiveLevel * 5); // 星5ベース売却額
+            // アルティメット、レジェンド、インフィニティの場合の基本パワー調整
+            let finalValue;
+            if (rarity === "ultimate") {
+                finalValue = Math.floor(30000000 * 1.157920892373162e+77);
+            } else {
+                finalValue = Math.max(1, Math.floor(baseValue * rarityMultiplier));
+            }
+            
+            const sellVal = Math.floor(finalValue * 3.5 * effectiveLevel * 5); // 売却額
+
+            // ガチャ装備は、上位3レアリティなら★99、それ以外なら★5
+            const star = (rarity === "ultimate" || rarity === "legend" || rarity === "infinity") ? 99 : 5;
 
             return {
                 id: "item_" + Date.now() + "_" + Math.floor(Math.random() * 1000000),
@@ -4020,7 +4104,7 @@
                 rarity: rarity,
                 effectType: effectType,
                 baseValue: finalValue, 
-                star: 5, // ガチャ装備は必ず★5
+                star: star, 
                 sellValue: sellVal
             };
         }
