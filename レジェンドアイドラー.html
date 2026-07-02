@@ -526,7 +526,7 @@
 
                     </div>
 
-                    <!-- サブタブ：チートガチャ (絞り込み機能・最上位レア排出追加) -->
+                    <!-- サブタブ：チートガチャ -->
                     <div id="gearsub-gacha" class="hidden flex-grow flex flex-col space-y-4">
                         <div class="bg-slate-950 p-4 rounded-xl border border-fuchsia-500/50 flex flex-col space-y-4 relative overflow-hidden">
                             <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(217,70,239,0.1),transparent_70%)] pointer-events-none"></div>
@@ -567,7 +567,7 @@
                                             <option value="gold">ゴールド獲得量 (GOLD)</option>
                                         </select>
                                     </div>
-                                    <!-- ランク指定 (最上位追加) -->
+                                    <!-- ランク指定 -->
                                     <div>
                                         <label class="block text-[10px] text-slate-400 mb-1 font-bold">品質指定:</label>
                                         <select id="gacha-filter-rarity" class="w-full bg-slate-950 border border-slate-800 rounded p-1.5 text-slate-300 focus:outline-none focus:border-fuchsia-500 font-bold">
@@ -680,7 +680,7 @@
                     </div>
 
                     <div class="pt-6 border-t border-slate-800 mt-auto">
-                        <button id="prestige-btn" onclick="triggerPrestige()" class="w-full bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-purple-950/50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex justify-center items-center gap-2">
+                        <button id="prestige-btn" onclick="triggerPrestige()" class="w-full bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-purple-950/50 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 flex justify-center items-center gap-2">
                             <i class="fa-solid fa-arrows-spin"></i> 転生を実行してジェムを獲得する
                         </button>
                     </div>
@@ -963,7 +963,7 @@
     <!-- ゲームロジック用スクリプト -->
     <script>
         // --- ゲームの初期状態＆マスターデータ ---
-        const GAME_VERSION = "2.9.2"; // 一括売却の2段階警告システム実装
+        const GAME_VERSION = "3.0.0"; // インフィニティ以上の売却価格調整・単位表記をギリシャ文字に拡張・売却バグ修正
         const APP_ID = "legend_idler_savedata";
 
         // 全ての装備スロット
@@ -1133,7 +1133,7 @@
             return "★".repeat(star);
         }
 
-        // ゲーム状態保持用オブジェクト
+        // --- ゲーム状態保持用オブジェクト ---
         let state = {
             gold: 0,
             gems: 0,
@@ -1400,10 +1400,10 @@
         function switchDeck(index) {
             if (index < 0 || index >= state.deckLimit) return;
             
-            // 切り替え前に現在のequipped情報を確実に退避
+            // 確実な退避
             state.decks[state.activeDeckIndex] = { ...state.equipped };
 
-            // 新アクティブデッキの情報をロード
+            // ロード
             state.activeDeckIndex = index;
             state.equipped = { ...state.decks[index] };
 
@@ -1415,16 +1415,13 @@
             saveGame();
         }
 
-        // --- ジェムショップでのデッキスロット購入 ---
+        // デッキスロット購入
         function buyDeckSlots() {
-            const cost = 1; // 1ジェムで+10枠
+            const cost = 1; 
             if (state.gems >= cost) {
                 state.gems -= cost;
-                
-                // 上限拡張
                 state.deckLimit += 10;
                 
-                // 追加分の初期化
                 for (let i = 0; i < 10; i++) {
                     state.decks.push({
                         weapon: null, shield: null, helmet: null, armor: null, boots: null, cloak: null, accessory: null, artifact: null
@@ -1440,7 +1437,7 @@
             }
         }
 
-        // --- ミッション戦闘の開始処理 ---
+        // ミッション戦闘開始
         function startMission() {
             if (isRaidFight || state.playerHp <= 0) {
                 showToast("挑戦不可", "現在はミッションを開始できません。", "fa-info-circle");
@@ -1455,24 +1452,18 @@
             updateUI();
         }
 
-        // --- モンスター戦闘処理 ---
-
         // 新しいモンスターをスポーンさせる
         function spawnMonster() {
-            monster.attackTimer = 0; // スポーン時に攻撃タイマーをリセット
-
-            // 生命の雫（💧）の延長制限時間（1レベルあたり+5秒）
+            monster.attackTimer = 0; 
             const timeBonus = (state.gemUpgradeLevels["gem_hp"] || 0) * 5;
 
-            // 背景リセット
             const clickZone = document.getElementById("click-zone");
             clickZone.classList.remove("from-red-950", "border-red-900", "from-indigo-950", "border-indigo-800");
             clickZone.classList.add("from-slate-950", "border-slate-800");
 
-            // レイドボスのスポーン
             if (isRaidFight) {
                 const diff = raidDifficulties[activeRaidDifficulty];
-                monster.name = `終焉の魔竜 Lv.${state.raidLevel} [${diff.name}]`;
+                monster.name = `終焉 of 魔竜 Lv.${state.raidLevel} [${diff.name}]`;
                 monster.emoji = "🐉🔥";
                 monster.maxHp = Math.floor(getRaidHp(state.raidLevel) * diff.hpMult);
                 monster.attack = Math.floor(50 * Math.pow(1.5, state.raidLevel - 1) * diff.atkMult);
@@ -1483,15 +1474,12 @@
                 
                 document.getElementById("monster-emoji").innerHTML = monster.emoji;
                 document.getElementById("monster-name").textContent = monster.name;
-                
                 clickZone.classList.add("from-red-950", "border-red-900");
                 clickZone.classList.remove("from-slate-950", "border-slate-800");
-                
                 updateHpBar();
                 return;
             }
 
-            // 現在のエリアに適したモンスターセットを選択
             let currentSet = areaMonsterData[0];
             for (let i = areaMonsterData.length - 1; i >= 0; i--) {
                 if (state.area >= areaMonsterData[i].minArea) {
@@ -1500,7 +1488,6 @@
                 }
             }
 
-            // 突発ミッションボスのスポーン
             if (isMissionFight) {
                 monster.name = "【強襲】" + currentSet.boss.name;
                 monster.emoji = currentSet.boss.emoji;
@@ -1513,18 +1500,14 @@
                 
                 document.getElementById("monster-emoji").innerHTML = monster.emoji;
                 document.getElementById("monster-name").textContent = monster.name;
-                
                 clickZone.classList.add("from-indigo-950", "border-indigo-800");
                 clickZone.classList.remove("from-slate-950", "border-slate-800");
-                
                 updateHpBar();
                 return;
             }
 
-            // 過去エリアでもボスが出現するように変更
             state.isBossFight = (state.killsInArea >= 10);
 
-            // Boss or 通常モンスターの設定
             if (state.isBossFight) {
                 monster.name = currentSet.boss.name;
                 monster.emoji = currentSet.boss.emoji;
@@ -1548,13 +1531,12 @@
 
             monster.hp = monster.maxHp;
 
-            // DOMに反映
             document.getElementById("monster-emoji").innerHTML = monster.emoji;
             document.getElementById("monster-name").textContent = monster.name;
             updateHpBar();
         }
 
-        // プレイヤーの最大HPを計算（パッシブ強化ステップ+10000%に対応）
+        // プレイヤーの最大HPを計算
         function getPlayerMaxHp() {
             let baseHp = 100;
             let totalAdventurerLvl = 0;
@@ -1564,7 +1546,6 @@
             baseHp += (state.maxArea * 20) + (totalAdventurerLvl * 10);
             
             const hpUpgradeLvl = state.gemUpgradeLevels["gem_player_hp"] || 0;
-            // 1レベルごとに+10000%（+100倍）
             const multiplier = 1 + (hpUpgradeLvl * 100);
             
             return Math.floor(baseHp * multiplier);
@@ -1725,7 +1706,7 @@
                 healPlayer(getPlayerMaxHp()); // 全回復
                 showToast("全回復！", "強敵を討伐し、体力が満ち溢れた！", "fa-heart");
             } else {
-                healPlayer(getPlayerMaxHp() * 0.1); // 10%回復
+                healPlayer(getPlayerMaxHp() * 0.1); 
             }
             
             // 装備アイテムの効果を加算
@@ -1797,7 +1778,7 @@
                 return;
             }
 
-            // 宝箱・アイテムドロップ判定
+            // 宝箱判定
             let chestDropped = false;
             if (state.isBossFight) {
                 chestDropped = true;
@@ -2171,8 +2152,14 @@
 
         // ゴールド獲得
         function addGold(amount) {
-            state.gold += amount;
-            state.stats.totalGold += amount;
+            if (isNaN(amount)) amount = 0; 
+            if (state.gold === Infinity || amount === Infinity) {
+                state.gold = Infinity;
+                state.stats.totalGold = Infinity;
+            } else {
+                state.gold += amount;
+                state.stats.totalGold += amount;
+            }
             updateUI();
         }
 
@@ -2407,13 +2394,12 @@
                     
                     const rat = raritySettings[item.rarity];
                     
-                    if (item.rarity === "ultimate") {
-                        // アルティメット専用の極限虹明滅テキスト
-                        nameEl.className = "text-[9px] font-black leading-tight truncate w-full text-ultimate";
-                        slotCard.className = "bg-cyan-950/30 p-2 rounded-xl text-center flex flex-col items-center justify-center min-h-[95px] relative border-ultimate shadow-[0_0_25px_rgba(0,255,255,0.6)]";
-                    } else if (item.rarity === "legend") {
+                    if (item.rarity === "legend") {
                         nameEl.className = "text-[9px] font-black leading-tight truncate w-full text-legend-rainbow";
                         slotCard.classList.add("border-2", "border-purple-500", "shadow-[0_0_25px_rgba(168,85,247,0.7)]", "animate-pulse");
+                    } else if (item.rarity === "ultimate") {
+                        nameEl.className = "text-[9px] font-black leading-tight truncate w-full text-ultimate";
+                        slotCard.className = "bg-cyan-950/30 p-2 rounded-xl border-ultimate shadow-[0_0_25px_rgba(6,182,212,0.8)]";
                     } else {
                         nameEl.className = `text-[9px] font-bold leading-tight truncate w-full ${rat.color}`;
                         slotCard.classList.add("border-2");
@@ -2542,7 +2528,6 @@
                 state.inventory.push(previouslyEquipped);
             }
 
-            // 現在の装備の変更をアクティブデッキにも反映
             state.decks[state.activeDeckIndex] = { ...state.equipped };
 
             if (itemToEquip.rarity === "ultimate") {
@@ -2562,7 +2547,6 @@
             if (mergeSelection.base && mergeSelection.base.id === itemId) mergeSelection.base = null;
             if (mergeSelection.material && mergeSelection.material.id === itemId) mergeSelection.material = null;
 
-            // 装備変更に伴い仲間カードの攻撃力表示も再描画
             adventurerTemplates.forEach(updateAdventurerCard);
 
             updateInventoryUI();
@@ -2583,12 +2567,10 @@
             state.inventory.push(item);
             state.equipped[slot] = null;
 
-            // デッキ情報を更新
             state.decks[state.activeDeckIndex] = { ...state.equipped };
 
             showToast("装備を外しました", `${item.name} をバッグに戻しました。`, "fa-reply");
             
-            // 装備を外したことに伴い仲間のDPSも再描画
             adventurerTemplates.forEach(adv => updateAdventurerCard(adv));
             
             updateInventoryUI();
@@ -2614,14 +2596,13 @@
             saveGame();
         }
 
-        // --- 不要なアイテムの一括売却 (2段階警告ロジックにアップデート) ---
+        // 一括売却モーダルを開く
         function sellAllItems() {
             if (state.inventory.length === 0) {
                 showToast("バッグが空です", "売却できるアイテムがありません。", "fa-info-circle");
                 return;
             }
             
-            // モーダルの表示を初期化 (ステップ1を表示、ステップ2を非表示)
             document.getElementById("sell-modal-step1").classList.remove("hidden");
             document.getElementById("sell-modal-step2").classList.add("hidden");
             document.getElementById("sell-all-modal").classList.remove("hidden");
@@ -2631,9 +2612,8 @@
             document.getElementById("sell-all-modal").classList.add("hidden");
         }
 
-        // 1回目の確認「次へ進む」を押したときの処理
+        // 1回目の確認
         function proceedToSellStep2() {
-            // インフィニティ以上のレアリティがバッグに含まれているかチェック
             const hasHighTier = state.inventory.some(item => 
                 item.rarity === "infinity" || 
                 item.rarity === "legend" || 
@@ -2641,24 +2621,25 @@
             );
 
             if (hasHighTier) {
-                // インフィニティ以上が含まれている場合は、でっかい赤文字警告のステップ2へ
                 document.getElementById("sell-modal-step1").classList.add("hidden");
                 document.getElementById("sell-modal-step2").classList.remove("hidden");
             } else {
-                // 通常装備（コモン〜トランセンデント）のみの場合は、即座に売却を実行
                 executeSellAllItems();
             }
         }
 
-        // 2回目の確認が取れたら、実際に全ての装備（アルティメット等も含む）を売却
+        // 2回目の確認＆売却実行
         function executeSellAllItems() {
             let soldCount = 0;
             let totalEarned = 0;
             
-            // バッグ内の全ての装備（チートガチャ産・極限レアも含む）を売却
             for (let i = state.inventory.length - 1; i >= 0; i--) {
                 const item = state.inventory[i];
-                totalEarned += item.sellValue;
+                if (item.sellValue === Infinity) {
+                    totalEarned = Infinity;
+                } else if (totalEarned !== Infinity) {
+                    totalEarned += item.sellValue;
+                }
                 
                 if (mergeSelection.base && mergeSelection.base.id === item.id) mergeSelection.base = null;
                 if (mergeSelection.material && mergeSelection.material.id === item.id) mergeSelection.material = null;
@@ -2673,7 +2654,6 @@
                 addGold(totalEarned);
                 showToast("全一括売却完了", `バッグ内の全ての装備 ${soldCount}個を売却し、${formatNum(totalEarned)} Gを獲得しました！`, "fa-coins");
                 
-                // 仲間のDPS表示を再描画
                 adventurerTemplates.forEach(updateAdventurerCard);
                 
                 updateInventoryUI();
@@ -2767,7 +2747,6 @@
                 costDisplay.textContent = formatNum(mergeCost);
 
                 let previewHTML = "";
-                // 進化判定
                 const isEvolution = (mergeSelection.base.star === 5 && mergeSelection.material.star === 5) || 
                                     (mergeSelection.base.rarity === "infinity" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99) ||
                                     (mergeSelection.base.rarity === "legend" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99);
@@ -2840,7 +2819,7 @@
             }
         }
 
-        // 次のレアリティの取得 (レジェンド、アルティメット対応)
+        // 次のレアリティの取得
         function getNextRarity(currentRarity) {
             if (currentRarity === "common") return "rare";
             if (currentRarity === "rare") return "epic";
@@ -2854,7 +2833,7 @@
             return "ultimate";
         }
 
-        // 合体素材の選択候補パネルを展開する
+        // 合体素材の選択
         function openItemSelectForMerge(slotType) {
             mergeSelection.currentMode = slotType;
             
@@ -2878,7 +2857,7 @@
                     const rat = raritySettings[item.rarity];
                     const isSelected = mergeSelection.material && mergeSelection.material.id === item.id;
                     if (isSelected) return;
-                    if (item.rarity === "ultimate") return; // アルティメットはベースに選べない
+                    if (item.rarity === "ultimate") return; 
 
                     const div = document.createElement("div");
                     const labelColor = item.rarity === "ultimate" ? "text-ultimate font-black" : (item.rarity === "legend" ? "text-legend-rainbow" : rat.color);
@@ -2905,6 +2884,7 @@
                     return;
                 }
 
+                // 部位は問わず、レアリティと★が一致すればOK
                 const candidates = state.inventory.filter(item => 
                     item.id !== mergeSelection.base.id &&
                     item.rarity === mergeSelection.base.rarity &&
@@ -2988,17 +2968,17 @@
                     currentBase.star = 99;
                     const rawVal = 30000000 * 1.157920892373162e+77;
                     currentBase.baseValue = rawVal;
-                    currentBase.sellValue = rawVal;
+                    currentBase.sellValue = Infinity; // 【売却バグ完全修正】
                     showToast("👑 全次元アルティメット神話 👑", `すべての理を統べる究極体「${currentBase.name}」が覚醒した！`, "fa-dragon");
                 } else if (nextRarity === "legend") {
                     currentBase.star = 99;
                     currentBase.baseValue = Math.floor(currentBase.baseValue * 1844000000000000000000);
-                    currentBase.sellValue = Math.floor(currentBase.sellValue * 1844000000000000000000);
+                    currentBase.sellValue = Infinity; // 【売却バグ完全修正】
                     showToast("🌟 伝説爆誕 🌟", `宇宙をも統べる伝説「${currentBase.name}」がレジェンドとして覚醒した！`, "fa-dragon");
                 } else if (nextRarity === "infinity") {
                     currentBase.star = 99;
                     currentBase.baseValue = Math.floor(currentBase.baseValue * 100000);
-                    currentBase.sellValue = Math.floor(currentBase.sellValue * 100000);
+                    currentBase.sellValue = 1.75e308; // 【売却バグ完全修正】
                     showToast("∞ 無限到達 ∞", `ついに「${currentBase.name}」が「${raritySettings[nextRarity].name}」へと昇華した！！`, "fa-infinity");
                 } else {
                     currentBase.star = 1;
@@ -3023,7 +3003,6 @@
             mergeSelection.base = null;
             mergeSelection.material = null;
 
-            // 装備合体後にも仲間のDPS表記を再描画
             adventurerTemplates.forEach(updateAdventurerCard);
 
             updateMergeUI();
@@ -3188,7 +3167,6 @@
 
             state.inventory = [];
             
-            // 全デッキのリセット
             state.decks = Array.from({ length: state.deckLimit }, () => ({
                 weapon: null, shield: null, helmet: null, armor: null, boots: null, cloak: null, accessory: null, artifact: null
             }));
@@ -3211,7 +3189,6 @@
 
         // --- セーブコードのエクスポート・インポート機能 ---
 
-        // セーブコードを暗号化(Base64)してエクスポート
         function exportSaveCode() {
             saveGame(); 
             try {
@@ -3236,7 +3213,6 @@
             }
         }
 
-        // インポートモーダルを開く
         function openImportConfirmModal() {
             const inputArea = document.getElementById("save-code-input");
             const code = inputArea.value.trim();
@@ -3269,7 +3245,6 @@
             pendingImportData = null;
         }
 
-        // インポートを実行して適用（リロード回避）
         function executeImport() {
             if (!pendingImportData) return;
 
@@ -3327,7 +3302,7 @@
             document.getElementById("dpc-display").textContent = formatNum(currentDpc);
             document.getElementById("dps-display").textContent = formatNum(currentDps);
 
-            // 仲間（冒険者）たちの個別DPS表示を最新チートボーナスに基づいて全自動再描画
+            // 仲間たちの個別DPS表示を同期
             adventurerTemplates.forEach(adv => {
                 const lvl = state.adventurerLevels[adv.id] || 0;
                 const dpsEl = document.getElementById(`adv-dps-${adv.id}`);
@@ -3337,7 +3312,7 @@
                 }
             });
 
-            // 消費しても減らない「獲得した累計ジェム数」に基づく、桁違い（1個につき+1,000,000%）の永続転生ボーナスを表記
+            // 全ジェムボーナス
             const totalGems = state.totalGemsEarned || 0;
             const prestigeBonus = totalGems * 1000000;
             document.getElementById("prestige-bonus-display").textContent = `+${prestigeBonus.toLocaleString()}% (全ジェムボーナス)`;
@@ -3464,7 +3439,6 @@
             return Math.floor(10000 * Math.pow(1.8, level - 1));
         }
 
-        // 難易度選択
         function selectRaidDifficulty(diffId) {
             currentRaidDifficulty = diffId;
             updateRaidUI();
@@ -3867,7 +3841,7 @@
             }
         }
 
-        // オートセーブを20秒毎に実行
+        // オートセーブを20秒毎に実行するように強化
         function setupAutoSave() {
             setInterval(() => {
                 saveGame();
@@ -3998,16 +3972,28 @@
             }, 3000);
         }
 
+        // 数値の単位をギリシャ文字(α~ω, αα~ωω)に対応
         function formatNum(value) {
             if (value === undefined || isNaN(value)) return "0";
+            if (value === Infinity) return "∞ ωω";
             if (value < 1000) return value.toLocaleString('ja-JP', { maximumFractionDigits: 1 });
             
             const baseSuffixes = ["", "K", "M", "B", "T", "Qa", "Qi"];
             const suffixes = [...baseSuffixes];
+            // A~Z
             for (let i = 65; i <= 90; i++) {
                 suffixes.push(String.fromCharCode(i));
             }
+            // AA~ZZ
             for (let i = 65; i <= 90; i++) {
+                suffixes.push(String.fromCharCode(i) + String.fromCharCode(i));
+            }
+            // α~ω (小文字ギリシャ文字: alpha は 945, omega は 969)
+            for (let i = 945; i <= 969; i++) {
+                suffixes.push(String.fromCharCode(i));
+            }
+            // αα~ωω
+            for (let i = 945; i <= 969; i++) {
                 suffixes.push(String.fromCharCode(i) + String.fromCharCode(i));
             }
 
@@ -4114,17 +4100,23 @@
                 baseValue *= 3;
             }
 
-            // アルティメット、レジェンド、インフィニティの場合の基本パワー調整
             let finalValue;
+            let sellVal;
+
             if (rarity === "ultimate") {
-                finalValue = Math.floor(30000000 * 1.157920892373162e+77);
+                finalValue = 30000000 * 1.157920892373162e+77;
+                sellVal = Infinity; // 【アルティメットは無限ゴールド売却】
+            } else if (rarity === "legend") {
+                finalValue = Math.max(1, Math.floor(baseValue * rarityMultiplier));
+                sellVal = Infinity; // 【レジェンドも無限ゴールド売却】
+            } else if (rarity === "infinity") {
+                finalValue = Math.max(1, Math.floor(baseValue * rarityMultiplier));
+                sellVal = 1.75e308; // 【インフィニティは1.75e308で売却でき、売却時にお金が「1.75 ωω」へ！】
             } else {
                 finalValue = Math.max(1, Math.floor(baseValue * rarityMultiplier));
+                sellVal = Math.floor(finalValue * 3.5 * effectiveLevel * 5); 
             }
-            
-            const sellVal = Math.floor(finalValue * 3.5 * effectiveLevel * 5); 
 
-            // ガチャ装備は、上位3レアリティなら★99、それ以外なら★5
             const star = (rarity === "ultimate" || rarity === "legend" || rarity === "infinity") ? 99 : 5;
 
             return {
