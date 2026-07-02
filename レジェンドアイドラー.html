@@ -454,7 +454,7 @@
 
                         <div class="flex justify-between items-center mb-2">
                             <h3 class="font-bold text-slate-200 text-sm"><i class="fa-solid fa-briefcase text-cyan-400 mr-1"></i> 所持アイテム一覧</h3>
-                            <button onclick="sellAllItems()" class="text-xs bg-red-950/40 border border-red-800/60 text-red-400 px-2.5 py-1 rounded hover:bg-red-900/40 transition">トランセンデント以外を全売却</button>
+                            <button onclick="sellAllItems()" class="text-xs bg-red-950/40 border border-red-800/60 text-red-400 px-2.5 py-1 rounded hover:bg-red-900/40 transition">一括売却を実行する</button>
                         </div>
                         <div id="inventory-list" class="grid grid-cols-1 md:grid-cols-2 gap-2 overflow-y-auto max-h-[260px] pr-1">
                             <!-- 動的にバッグの中身が配置されます -->
@@ -922,24 +922,40 @@
         </div>
     </div>
 
-    <!-- 一括売却確認モーダル -->
+    <!-- 一括売却確認モーダル (2段階警告・でっかい赤文字警告仕様にアップデート) -->
     <div id="sell-all-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-slate-900 border-2 border-red-500/50 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div class="text-center">
-                <div class="text-red-500 text-4xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <h3 class="text-xl font-bold text-white">一括売却の確認</h3>
-                <p class="text-sm text-slate-400 mt-2">
-                    バッグ内の <span class="text-red-400 font-bold">トランセンデント、インフィニティ、レジェンド、アルティメット以外</span> のすべての装備を一気に売却します。<br>
-                    この操作は取り消せません。本当によろしいですか？
+            <div class="text-center space-y-3" id="sell-modal-step1">
+                <div class="text-red-500 text-4xl mb-1"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 class="text-xl font-bold text-white" id="sell-modal-title">一括売却の確認 (1/2)</h3>
+                <p class="text-sm text-slate-300">
+                    バッグ内の全ての装備を一気に売却します。<br>
+                    <span class="text-amber-400 font-bold">本当に売却していいですか？</span>
                 </p>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeSellAllModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-4 rounded-xl font-bold transition">
+                        キャンセル
+                    </button>
+                    <button onclick="proceedToSellStep2()" class="flex-1 bg-red-700 hover:bg-red-600 text-white py-2 px-4 rounded-xl font-bold transition">
+                        次へ進む
+                    </button>
+                </div>
             </div>
-            <div class="flex gap-3">
-                <button onclick="closeSellAllModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-4 rounded-xl font-bold transition">
-                    キャンセル
-                </button>
-                <button onclick="executeSellAllItems()" class="flex-1 bg-red-700 hover:bg-red-600 text-white py-2 px-4 rounded-xl font-bold transition">
-                    すべて売却する
-                </button>
+            
+            <div class="text-center space-y-4 hidden" id="sell-modal-step2">
+                <div class="text-red-600 text-6xl font-black animate-bounce tracking-widest" id="sell-modal-warning-big">本当に？</div>
+                <h3 class="text-lg font-bold text-white">最終確認 (2/2)</h3>
+                <p class="text-xs text-red-400 leading-relaxed bg-red-950/40 p-3 rounded-lg border border-red-900/40" id="sell-modal-warning-desc">
+                    バッグの中に「インフィニティ」「レジェンド」「アルティメット」などの超希少・チート装備が含まれています。売却すると二度と戻りません。本当の本当に売却しますか？
+                </p>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="closeSellAllModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2 px-4 rounded-xl font-bold transition">
+                        キャンセル
+                    </button>
+                    <button onclick="executeSellAllItems()" class="flex-grow bg-red-700 hover:bg-red-600 text-white py-2.5 px-6 rounded-xl font-black text-sm transition shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                        失う覚悟で全て売却
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -947,7 +963,7 @@
     <!-- ゲームロジック用スクリプト -->
     <script>
         // --- ゲームの初期状態＆マスターデータ ---
-        const GAME_VERSION = "2.9.0"; // アルティメットランク追加・チートガチャ追加排出対応
+        const GAME_VERSION = "2.9.2"; // 一括売却の2段階警告システム実装
         const APP_ID = "legend_idler_savedata";
 
         // 全ての装備スロット
@@ -1108,7 +1124,7 @@
             transcendent: { name: "トランセンデント", color: "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 via-red-400 to-amber-400 font-black animate-pulse drop-shadow-[0_0_8px_rgba(217,70,239,0.8)]", border: "border-fuchsia-500 shadow-[0_0_20px_rgba(217,70,239,0.8)]", bg: "bg-fuchsia-950/50", power: 300.0 },
             infinity: { name: "インフィニティ", color: "text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-white to-red-400 font-black animate-bounce drop-shadow-[0_0_12px_rgba(255,255,255,0.9)]", border: "border-white shadow-[0_0_30px_rgba(255,255,255,1)]", bg: "bg-white/20", power: 30000000.0 },
             legend: { name: "レジェンド", color: "text-legend-rainbow font-extrabold drop-shadow-[0_0_15px_rgba(168,85,247,0.9)] animate-pulse", border: "bg-legend-rainbow shadow-[0_0_35px_rgba(168,85,247,1)]", bg: "bg-purple-950/40", power: 55320000000000000000.0 }, // インフィニティの18.44垓倍
-            ultimate: { name: "アルティメット", color: "text-ultimate font-black drop-shadow-[0_0_20px_rgba(0,255,255,1)]", border: "border-ultimate shadow-[0_0_50px_rgba(0,255,255,1)]", bg: "bg-cyan-950/50", power: 34743285100000000000000000000000000000000000000000000000000000000000000000.0 } // インフィニティの強さ(30,000,000) * 符号なし256bitの最大数
+            ultimate: { name: "アルティメット", color: "text-ultimate font-black drop-shadow-[0_0_20px_rgba(0,255,255,1)]", border: "border-ultimate shadow-[0_0_50px_rgba(0,255,255,1)]", bg: "bg-cyan-950/50", power: 34743285100000000000000000000000000000000000000000000000000000000000000000.0 } // インフィニティの強さ(30,000,000) * 2^256-1
         };
 
         // 星表示用ヘルパー関数
@@ -2530,7 +2546,7 @@
             state.decks[state.activeDeckIndex] = { ...state.equipped };
 
             if (itemToEquip.rarity === "ultimate") {
-                showToast("👑全次元究極の権能👑", `${itemToEquip.emoji} 究極神話 ${itemToEquip.name} を装備しました。`, "fa-dragon");
+                showToast("👑全次元アルティメット神話👑", `${itemToEquip.emoji} 究極神話 ${itemToEquip.name} を装備しました。`, "fa-dragon");
             } else if (itemToEquip.rarity === "legend") {
                 showToast("🌟神を超える伝説🌟", `${itemToEquip.emoji} 宇宙を超越する ${itemToEquip.name} を装備しました。`, "fa-dragon");
             } else if (itemToEquip.rarity === "infinity") {
@@ -2598,12 +2614,16 @@
             saveGame();
         }
 
-        // 不要なアイテムを一括売却 (アルティメット・レジェンド装備も保護リストに追加)
+        // --- 不要なアイテムの一括売却 (2段階警告ロジックにアップデート) ---
         function sellAllItems() {
             if (state.inventory.length === 0) {
                 showToast("バッグが空です", "売却できるアイテムがありません。", "fa-info-circle");
                 return;
             }
+            
+            // モーダルの表示を初期化 (ステップ1を表示、ステップ2を非表示)
+            document.getElementById("sell-modal-step1").classList.remove("hidden");
+            document.getElementById("sell-modal-step2").classList.add("hidden");
             document.getElementById("sell-all-modal").classList.remove("hidden");
         }
 
@@ -2611,33 +2631,56 @@
             document.getElementById("sell-all-modal").classList.add("hidden");
         }
 
+        // 1回目の確認「次へ進む」を押したときの処理
+        function proceedToSellStep2() {
+            // インフィニティ以上のレアリティがバッグに含まれているかチェック
+            const hasHighTier = state.inventory.some(item => 
+                item.rarity === "infinity" || 
+                item.rarity === "legend" || 
+                item.rarity === "ultimate"
+            );
+
+            if (hasHighTier) {
+                // インフィニティ以上が含まれている場合は、でっかい赤文字警告のステップ2へ
+                document.getElementById("sell-modal-step1").classList.add("hidden");
+                document.getElementById("sell-modal-step2").classList.remove("hidden");
+            } else {
+                // 通常装備（コモン〜トランセンデント）のみの場合は、即座に売却を実行
+                executeSellAllItems();
+            }
+        }
+
+        // 2回目の確認が取れたら、実際に全ての装備（アルティメット等も含む）を売却
         function executeSellAllItems() {
             let soldCount = 0;
             let totalEarned = 0;
             
+            // バッグ内の全ての装備（チートガチャ産・極限レアも含む）を売却
             for (let i = state.inventory.length - 1; i >= 0; i--) {
                 const item = state.inventory[i];
-                // トランセンデント、インフィニティ、レジェンド、アルティメットは絶対に自動売却・一括売却しない
-                if (item.rarity !== "transcendent" && item.rarity !== "infinity" && item.rarity !== "legend" && item.rarity !== "ultimate") {
-                    totalEarned += item.sellValue;
-                    
-                    if (mergeSelection.base && mergeSelection.base.id === item.id) mergeSelection.base = null;
-                    if (mergeSelection.material && mergeSelection.material.id === item.id) mergeSelection.material = null;
+                totalEarned += item.sellValue;
+                
+                if (mergeSelection.base && mergeSelection.base.id === item.id) mergeSelection.base = null;
+                if (mergeSelection.material && mergeSelection.material.id === item.id) mergeSelection.material = null;
 
-                    state.inventory.splice(i, 1);
-                    soldCount++;
-                }
+                state.inventory.splice(i, 1);
+                soldCount++;
             }
             
             closeSellAllModal();
 
             if (soldCount > 0) {
                 addGold(totalEarned);
-                showToast("一括売却完了", `保護対象以外の ${soldCount}個の装備を売却し、${formatNum(totalEarned)} Gを獲得しました。`, "fa-coins");
+                showToast("全一括売却完了", `バッグ内の全ての装備 ${soldCount}個を売却し、${formatNum(totalEarned)} Gを獲得しました！`, "fa-coins");
+                
+                // 仲間のDPS表示を再描画
+                adventurerTemplates.forEach(updateAdventurerCard);
+                
                 updateInventoryUI();
+                updateUI();
                 saveGame();
             } else {
-                showToast("対象アイテムなし", "バッグ内に売却可能なアイテムがありませんでした。", "fa-info-circle");
+                showToast("対象アイテムなし", "バッグ内にアイテムがありませんでした。", "fa-info-circle");
             }
         }
 
@@ -2724,7 +2767,7 @@
                 costDisplay.textContent = formatNum(mergeCost);
 
                 let previewHTML = "";
-                // 進化判定（各最上位進化のトリガー）
+                // 進化判定
                 const isEvolution = (mergeSelection.base.star === 5 && mergeSelection.material.star === 5) || 
                                     (mergeSelection.base.rarity === "infinity" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99) ||
                                     (mergeSelection.base.rarity === "legend" && mergeSelection.base.star === 99 && mergeSelection.material.star === 99);
@@ -2739,7 +2782,6 @@
                     } else if (nextRarity === "legend") {
                         nextBaseVal = Math.floor(mergeSelection.base.baseValue * 1844000000000000000000);
                     } else if (nextRarity === "ultimate") {
-                        // インフィニティ(30,000,000) * 2^256-1
                         nextBaseVal = Math.floor(30000000 * 1.157920892373162e+77);
                     }
 
@@ -2748,7 +2790,7 @@
                         rarity: nextRarity,
                         effectType: mergeSelection.base.effectType,
                         baseValue: nextBaseVal,
-                        star: 99 // インフィニティ、レジェンド、アルティメットは★99固定
+                        star: 99 
                     };
 
                     const labelClass = nextRarity === "ultimate" ? "text-ultimate font-black" : (nextRarity === "legend" ? "text-legend-rainbow font-black" : `${ratNext.color} font-bold`);
@@ -2863,7 +2905,6 @@
                     return;
                 }
 
-                // 部位(type)は問わず、レアリティと★が一致すればOK
                 const candidates = state.inventory.filter(item => 
                     item.id !== mergeSelection.base.id &&
                     item.rarity === mergeSelection.base.rarity &&
@@ -2945,7 +2986,6 @@
                 
                 if (nextRarity === "ultimate") {
                     currentBase.star = 99;
-                    // インフィニティ(30,000,000) * 2^256-1
                     const rawVal = 30000000 * 1.157920892373162e+77;
                     currentBase.baseValue = rawVal;
                     currentBase.sellValue = rawVal;
@@ -3176,7 +3216,6 @@
             saveGame(); 
             try {
                 const jsonStr = JSON.stringify(state);
-                // 日本語文字化け防止のBase64エンコード
                 const code = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, function(match, p1) {
                     return String.fromCharCode('0x' + p1);
                 }));
@@ -3185,7 +3224,6 @@
                 outputArea.value = code;
                 outputArea.select();
                 
-                // クリップボードへコピー
                 try {
                     document.execCommand('copy');
                     showToast("コピー成功！", "セーブコードをクリップボードにコピーしました。大切に保管してください！", "fa-file-signature");
@@ -3208,19 +3246,17 @@
             }
 
             try {
-                // Base64デコードと復号
                 const jsonStr = decodeURIComponent(atob(code).split('').map(function(c) {
                     return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                 }).join(''));
 
                 const parsed = JSON.parse(jsonStr);
 
-                // 簡易データバリデーション
                 if (parsed.gold === undefined || parsed.gems === undefined || parsed.area === undefined) {
                     throw new Error("データ破損");
                 }
 
-                pendingImportData = parsed; // 一時変数に保管
+                pendingImportData = parsed; 
                 document.getElementById("import-confirm-modal").classList.remove("hidden");
             } catch (e) {
                 console.error("解読エラー:", e);
@@ -3239,13 +3275,13 @@
 
             try {
                 state = pendingImportData;
-                saveGame(); // ローカルストレージに書き込み
+                saveGame(); 
                 
                 stopBossTimer();
                 isRaidFight = false;
                 isMissionFight = false;
                 
-                loadGame(); // セーブデータから再読み込みして確実に適用
+                loadGame(); 
                 initializeDOMElements();
                 switchTab('stats');
                 updateUI();
@@ -3428,6 +3464,7 @@
             return Math.floor(10000 * Math.pow(1.8, level - 1));
         }
 
+        // 難易度選択
         function selectRaidDifficulty(diffId) {
             currentRaidDifficulty = diffId;
             updateRaidUI();
@@ -3728,7 +3765,6 @@
 
         function saveGame(isManual = false) {
             try {
-                // セーブ前に現在のequipped情報を確実に現在のデッキへセーブ
                 state.decks[state.activeDeckIndex] = { ...state.equipped };
                 localStorage.setItem(APP_ID, JSON.stringify(state));
                 if (isManual) {
@@ -3771,7 +3807,6 @@
                             artifact: dk.artifact || null
                         }));
                         
-                        // 枠数に不足があれば補填
                         while (state.decks.length < state.deckLimit) {
                             state.decks.push({
                                 weapon: null, shield: null, helmet: null, armor: null, boots: null, cloak: null, accessory: null, artifact: null
@@ -3969,11 +4004,9 @@
             
             const baseSuffixes = ["", "K", "M", "B", "T", "Qa", "Qi"];
             const suffixes = [...baseSuffixes];
-            // A~Z を追加
             for (let i = 65; i <= 90; i++) {
                 suffixes.push(String.fromCharCode(i));
             }
-            // AA~ZZ を追加
             for (let i = 65; i <= 90; i++) {
                 suffixes.push(String.fromCharCode(i) + String.fromCharCode(i));
             }
@@ -3998,7 +4031,6 @@
                 return;
             }
 
-            // 指定コントロールの取得
             const filterType = document.getElementById("gacha-filter-type").value;
             const filterEffect = document.getElementById("gacha-filter-effect").value;
             const filterRarity = document.getElementById("gacha-filter-rarity").value;
@@ -4021,7 +4053,6 @@
                 state.inventory.push(newItem);
             }
             
-            // 最高レアが出たときはお知らせを豪華に
             if (ultimateCount > 0) {
                 showToast("👑究極神話降臨👑", `究極の装備を${pulls}個獲得！ (アルティメット: ${ultimateCount}個, レジェンド: ${legendCount}個, インフィニティ: ${infinityCount}個)`, "fa-dragon");
             } else if (legendCount > 0 || infinityCount > 0) {
@@ -4091,7 +4122,7 @@
                 finalValue = Math.max(1, Math.floor(baseValue * rarityMultiplier));
             }
             
-            const sellVal = Math.floor(finalValue * 3.5 * effectiveLevel * 5); // 売却額
+            const sellVal = Math.floor(finalValue * 3.5 * effectiveLevel * 5); 
 
             // ガチャ装備は、上位3レアリティなら★99、それ以外なら★5
             const star = (rarity === "ultimate" || rarity === "legend" || rarity === "infinity") ? 99 : 5;
